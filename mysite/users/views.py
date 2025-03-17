@@ -1,5 +1,11 @@
-from django.shortcuts import render
-from mysite.fake_db import user_db
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from fake_db import user_db
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login as django_login
 
 
 def user_list(request):
@@ -16,3 +22,22 @@ def user_info(request, user_id):
 
     context = {"user": user}
     return render(request, "user_info.html", context)
+
+def sign_up(request):
+    form = UserCreationForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        return redirect(settings.LOGIN_URL)
+
+    context = {'form': form}
+    return render(request, 'registration/signup.html', context)
+
+
+def login_view(request):
+    form = AuthenticationForm(request, data=request.POST or None)
+    if form.is_valid():
+        django_login(request, form.get_user())
+        return redirect(settings.LOGIN_REDIRECT_URL)
+
+    context = {'form': form}
+    return render(request, 'registration/login.html', context)
